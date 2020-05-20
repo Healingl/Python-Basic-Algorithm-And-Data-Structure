@@ -181,59 +181,53 @@ class Tree(object):
           print(root.elem)
           
        # 先序打印二叉树（非递归）
-  	def preOrderTravese(self, node):
-  		"""
-          先序遍历-非递归实现
-          :param root: 
-          :return: 
-          """
-          stack = [node]
-          while len(stack) > 0:
-              print(node.val)
-              if node.right is not None:
-                  stack.append(node.right)
-              if node.left is not None:
-                  stack.append(node.left)
-              node = stack.pop()
+       #首先是先序遍历，需要借助一个堆栈，按照父亲节点、左孩子、右孩子的顺序压到堆里面，每次弹出栈顶元素 
+  	def preorder(root): # 先序
+          stack = []
+          while stack or root:
+              while root:
+                  print(root.val)
+                  stack.append(root)
+                  root = root.lchild
+              root = stack.pop()
+              root = root.rchild
+  
               
       # 中序打印二叉树（非递归）
-      def inOrderTraverse(self, node):
+      # 与先序遍历只是遍历的位置改变
+      def inorder(root): # 中序
           stack = []
-          pos = node
-          while pos is not None or len(stack) > 0:
-              if pos is not None:
-                  stack.append(pos)
-                  pos = pos.left
-              else:
-                  pos = stack.pop()
-                  print(pos.val)
-                  pos = pos.right
+          while stack or root:
+              while root:
+                  stack.append(root)
+                  root = root.lchild
+              root = stack.pop()
+              print(root.val)
+              root = root.rchild
+  
                   
       # 后序打印二叉树（非递归）
-      # 使用两个栈结构
-      # 第一个栈进栈顺序：左节点->右节点->跟节点
-      # 第一个栈弹出顺序： 跟节点->右节点->左节点(先序遍历栈弹出顺序：跟->左->右)
-      # 第二个栈存储为第一个栈的每个弹出依次进栈
-      # 最后第二个栈依次出栈
-      def postOrderTraverse(self, node):
-          stack = [node]
-          stack2 = []
-          while len(stack) > 0:
-              node = stack.pop()
-              stack2.append(node)
-              if node.left is not None:
-                  stack.append(node.left)
-              if node.right is not None:
-                  stack.append(node.right)
-          while len(stack2) > 0:
-              print(stack2.pop().val)
+      # 最后到了后序遍历，这个有一点麻烦，需要好好理解，有左孩子就遍历左孩子，没有就转到右孩子
+      def postorder(root): # 后序
+          stack = []
+          while stack or root:
+              while root:
+                  stack.append(root)
+                  root = root.lchlid if root.lchild else root.right
+              root = stack.pop()
+              print(root.val)
+              if stack and stack[-1].lchild == root:
+                  root = stack[-1].rchild
+              else:
+                  root = None
+  
                   
   ```
-
   
-
   
-
+  
+  
+  
 - 广度遍历
 
 ```
@@ -270,6 +264,321 @@ class Tree:
 
 
 
+二叉树常规操作：
+
+```
+# 统计树中节点个数
+def count_BinTNodes(t):
+    if t is None:
+        return 0
+    else:
+        return 1 + count_BinTNode(t.left) \
+               + count_BinTNode(t.right)
+# 求二叉树所有数值和
+def sum_BinTNodes(t):
+    if t is None:
+        return 0
+    else:
+        return t.dat + sum_BinTNodes(t.left) \
+               + sum_BinTNodes(t.right
+```
+
+### 二叉搜索树（BST)
+
+中序遍历团灭系列二叉搜索树问题
+
+https://leetcode-cn.com/problems/minimum-absolute-difference-in-bst/solution/zhong-xu-bian-li-tuan-mie-xi-lie-er-cha-sou-suo-sh/
+
+通过中序遍历二叉搜索树得到的关键码序列是一个递增序列。
+这是二叉搜索树的一个重要性质，巧妙利用这一性质可以解决一系列二叉搜索树问题。
+本系列以以下非递归中序遍历代码为核心，解决一系列相关问题。
+
+```
+p = root
+st = []  # 用列表模拟实现栈的功能
+while p is not None or st:
+    while p is not None:
+        st.append(p)
+        p = p.left
+    p = st.pop()
+    proc(p.val)
+    p = p.right
+```
+
+**一 二叉搜索树迭代器**
+（一）算法思路
+中序遍历二叉树
+（二）算法实现
+
+```
+class BSTIterator:
+
+    def __init__(self, root: TreeNode):
+        self.root = root
+        self.st = []
+        self.current = self.root
+        
+
+    def next(self) -> int:
+        """
+        @return the next smallest number
+        """
+        while self.current is not None or self.st:
+            while self.current is not None:
+                self.st.append(self.current)
+                self.current = self.current.left
+            self.current = self.st.pop()
+            node = self.current
+            self.current = self.current.right
+            return node.val
+            
+            
+
+    def hasNext(self) -> bool:
+        """
+        @return whether we have a next smallest number
+        """
+        return self.current or self.st
+```
+
+**二 二叉搜索树的最小绝对差**
+（一）算法思路
+中序遍历二叉搜索树，第一个结点外的每个节点与其前一节点的差值，如果该值小于最小绝对差，就用它更新最小绝对差（初始可设为无穷）。
+（二）算法实现
+
+```
+class Solution:
+    def getMinimumDifference(self, root: TreeNode) -> int:
+        st = []
+        p = root
+        pre = -float('inf')
+        min_val = float('inf')
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            cur = p.val
+            if cur - pre < min_val:
+                min_val = cur - pre
+            pre = cur
+            p = p.right
+        return min_val
+
+
+```
+
+（三）复杂度分析
+时间复杂度：O(N)，N为树中节点个数。
+空间复杂度：O(log(N))。
+
+
+
+**三 二叉搜索树中第k小的元素**
+
+（一）算法思路
+二叉搜索树的中序遍历序列为递增序列，因此可中序遍历二叉搜索树，返回第K个元素。
+（二）算法实现
+
+```
+class Solution:
+    def kthSmallest(self, root: TreeNode, k: int) -> int:
+        st = []
+        p = root
+        s = 0
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            s += 1
+            if s == k:
+                return p.val
+            p = p.right
+
+```
+
+（三） 复杂度分析
+时间复杂度：O(N)，N为树中节点个数。
+空间复杂度：O(log(N))。
+
+
+
+**四 二叉搜索树中的众数**
+
+（一） 算法思想
+二叉搜索树的中序遍历序列单调不减（或曰非严格单调递增），因此可考虑中序遍历二叉搜索树。
+用max_times记录已访问节点的最大重复元素个数，time表示当前访问节点的元素值的出现次数,用res=[]记录结果。
+若time == max_times，则将当前节点值添加到结果集。
+若time > max_times，则以当前节点值构造新的列表作为结果，并用time更新max_times。
+中序遍历结束后，返回结果res。
+
+（二） 算法实现
+
+```
+class Solution:
+    def findMode(self, root: TreeNode) -> List[int]:
+        if root is None:
+            return []
+        p = root
+        st = []
+        res = []
+        max_times = 1
+        time = 1
+        pre = float("inf")
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            
+            cur = p.val
+            if cur == pre:
+                time += 1
+            else:
+                time = 1
+                pre = cur
+            if time == max_times:
+                res.append(cur)
+            if time > max_times:
+                res = [cur]
+                max_times = time
+    
+            p = p.right
+                
+        return res
+
+```
+
+（三） 复杂度分析
+时间复杂度：O(N)，N为树中节点个数。
+空间复杂度：最坏情况下为O(N)， 例如树畸形（树的高度为线性）或每个元素出现一次的情形。
+
+
+
+**五 二叉搜索树的范围和**
+（一）算法思路
+中序遍历二叉搜索树
+当节点的值等于L时开始累加，当节点的值等于R时停止累加并返回累加的结果。
+（二）算法实现
+
+```
+class Solution:
+    def rangeSumBST(self, root: TreeNode, L: int, R: int) -> int:
+        st = []
+        p = root
+        s = 0
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            if p.val == L:
+                s = L
+                p = p.right
+                break
+            p = p.right
+        
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            s += p.val
+            if p.val == R:
+                return s
+            p = p.right
+```
+
+（三）复杂度分析
+时间复杂度：O(N), N为树中节点数。
+空间复杂度：O(log(N))。
+
+**六 两数之和IV-输入BST**
+（一）算法思路
+中序遍历+双指针
+（二）算法实现
+
+```
+class Solution(object):
+    def findTarget(self, root, k):
+        """
+        :type root: TreeNode
+        :type k: int
+        :rtype: bool
+        """
+        nums = []
+        st = []
+        p = root
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            nums.append(p.val)
+            p = p.right
+        
+        n = len(nums)
+        i, j = 0, n-1
+        while i < j:
+            if nums[i] + nums[j] == k:
+                return True
+            elif nums[i] + nums[j] > k:
+                j -= 1
+            else:
+                i += 1
+        return False
+```
+
+（三）复杂度分析
+时间复杂度：O(N)
+空间复杂度：O(N)
+
+
+
+**七 验证二叉搜索树**
+
+（一）算法思路
+一棵二叉树是二叉搜索树的充要条件是它的中序遍历序列单调递增，因此可以通过判断一个树的中序遍历序列是否单调递增来验证该树是否为二叉搜索树。
+（二）算法实现
+
+```
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution(object):
+    def isValidBST(self, root):
+        """
+        :type root: TreeNode
+        :rtype: bool
+        """
+        pre = -float('inf')
+        p = root
+        st = []
+        while p is not None or st:
+            while p is not None:
+                st.append(p)
+                p = p.left
+            p = st.pop()
+            if p.val > pre:
+                pre = p.val
+            else:
+                return False
+            p = p.right
+        return True
+
+```
+
+（三）复杂度分析
+时间复杂度：O(N)。
+空间复杂度：O(log(N))。
+
+
+
 
 
 ### 平衡二叉树
@@ -292,3 +601,10 @@ class Tree:
 
 
 
+
+
+## 基础算法
+
+### **深度优先搜索算法**
+
+定义：一种用于遍历或搜索树或图的算法。 沿着树的深度遍历树的节点，尽可能深的搜索树的分支。当节点v的所在边都己被探寻过或者在搜寻时结点不满足条件，搜索将回溯到发现节点v的那条边的起始节点。整个进程反复进行直到所有节点都被访问为止。属于盲目搜索,最糟糕的情况算法时间复杂度为O(!n)。
