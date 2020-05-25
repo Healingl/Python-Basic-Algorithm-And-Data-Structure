@@ -184,6 +184,7 @@ class Tree(object):
        #首先是先序遍历，需要借助一个堆栈，按照父亲节点、左孩子、右孩子的顺序压到堆里面，每次弹出栈顶元素 
   	def preorder(root): # 先序
           stack = []
+          # python中while 空列表为False，while 非空
           while stack or root:
               while root:
                   print(root.val)
@@ -220,7 +221,6 @@ class Tree(object):
                   root = stack[-1].rchild
               else:
                   root = None
-  
                   
   ```
   
@@ -274,6 +274,14 @@ def count_BinTNodes(t):
     else:
         return 1 + count_BinTNode(t.left) \
                + count_BinTNode(t.right)
+
+# 求树最大深度
+def maxDepth(root):
+    if not root:
+        return 0
+    return 1+max(maxDepth(root.left),maxDepth(root.right))
+
+
 # 求二叉树所有数值和
 def sum_BinTNodes(t):
     if t is None:
@@ -607,4 +615,4 @@ class Solution(object):
 
 ### **深度优先搜索算法**
 
-定义：一种用于遍历或搜索树或图的算法。 沿着树的深度遍历树的节点，尽可能深的搜索树的分支。当节点v的所在边都己被探寻过或者在搜寻时结点不满足条件，搜索将回溯到发现节点v的那条边的起始节点。整个进程反复进行直到所有节点都被访问为止。属于盲目搜索,最糟糕的情况算法时间复杂度为O(!n)。
+定义：一种用于遍历或搜索树或图的算法。 沿着树的深度遍历树的节点，尽可能深的搜索树的分支。当节点v的所在边都己被探寻过或者在搜寻时结点不满足条件，搜索将回溯到发现节点v的那条边的起始节点。整个进程反复进行直到所有节点都被访问为止。属于盲目搜索,最糟糕的情况算法时间复杂度为O(n)。
